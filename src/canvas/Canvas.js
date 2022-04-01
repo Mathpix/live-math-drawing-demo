@@ -7,6 +7,7 @@ export function Canvas() {
     prepareCanvas,
     startDrawing,
     finishDrawing,
+    leaveCanvas,
     draw,
   } = useCanvas();
 
@@ -19,6 +20,7 @@ export function Canvas() {
       onMouseDown={startDrawing}
       onMouseUp={finishDrawing}
       onMouseMove={draw}
+      onMouseOut={leaveCanvas}
       ref={canvasRef}
     />
   );

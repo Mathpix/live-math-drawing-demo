@@ -43,6 +43,10 @@ export const CanvasProvider = ({ children }) => {
     contextRef.current.stroke();
   };
 
+  const leaveCanvas = () => {
+    setIsDrawing(false);
+  }
+
   const clearCanvas = () => {
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d")
@@ -58,6 +62,7 @@ export const CanvasProvider = ({ children }) => {
         prepareCanvas,
         startDrawing,
         finishDrawing,
+        leaveCanvas,
         clearCanvas,
         draw,
       }}

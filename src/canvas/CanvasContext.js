@@ -129,6 +129,11 @@ export const CanvasProvider = ({ children }) => {
     setCurrentStroke([...currentStroke, {x: offsetX, y: offsetY}]);
   };
 
+
+  const leaveCanvas = () => {
+    setIsDrawing(false);
+  }
+
   const clearCanvas = (redraw=true) => {
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d")
@@ -175,6 +180,7 @@ export const CanvasProvider = ({ children }) => {
         prepareCanvas,
         startDrawing,
         finishDrawing,
+        leaveCanvas,
         clearCanvas,
         getLatex,
         draw,

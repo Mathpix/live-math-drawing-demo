@@ -12,6 +12,7 @@ export const CanvasProvider = ({ children }) => {
   const [redrawFlag, setRedrawFlag] = useState(false);
   const [redoFlag, setRedoFlag] = useState(false);
   const [undoFlag, setUndoFlag] = useState(false);
+  const [checkStrikeThroughFlag, setCheckStrikeThroughFlag] = useState(false);
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
 
@@ -34,26 +35,49 @@ export const CanvasProvider = ({ children }) => {
     const { offsetX, offsetY } = nativeEvent;
     contextRef.current.beginPath();
     contextRef.current.moveTo(offsetX, offsetY);
-    setCurrentStroke([{x: offsetX, y: offsetY}]);
+    setCurrentStroke({
+      points: [{x: offsetX, y: offsetY}],
+      minX: offsetX,
+      minY: offsetY,
+      maxX: offsetX,
+      maxY: offsetY,
+      timestamp: Date.now()
+    });
     setIsDrawing(true);
+  };
+
+  const draw = ({ nativeEvent }) => {
+    if (!isDrawing) {
+      return;
+    }
+    const { offsetX, offsetY } = nativeEvent;
+    contextRef.current.lineTo(offsetX, offsetY);
+    contextRef.current.stroke();
+    const minX = Math.min(offsetX, currentStroke.minX);
+    const minY = Math.min(offsetY, currentStroke.minY);
+    const maxX = Math.max(offsetX, currentStroke.maxX);
+    const maxY = Math.max(offsetY, currentStroke.maxY);
+
+    setCurrentStroke({
+      points: [...currentStroke.points,{x: offsetX, y: offsetY}],
+      minX: minX,
+      minY: minY,
+      maxX: maxX,
+      maxY: maxY,
+      timestamp: Date.now()
+    });
   };
 
   const finishDrawing = () => {
     setStrokes([...strokes, currentStroke]);
-    setUndoHistory([...undoHistory, {action: "Add", strokes:[currentStroke]}]);
-    setRedoHistory([]);
     contextRef.current.closePath();
     setIsDrawing(false);
+    setCheckStrikeThroughFlag(!checkStrikeThroughFlag);
   };
 
   useEffect(() => {
     redraw();
   }, [redrawFlag]);
-
-  useEffect(() => {
-    console.log("Undo =>"+undoHistory.length);
-    console.log("Redo =>"+redoHistory.length);
-  }, [undoHistory, redoHistory]);
 
   useEffect(() => {
     const redoStrokes = undoHistory[undoHistory.length - 1];
@@ -81,6 +105,63 @@ export const CanvasProvider = ({ children }) => {
     }
   }, [undoFlag]);
 
+  useEffect(() => {
+    var removeStrokes = [];
+    strokes.slice(0,-1).forEach(stroke => {
+      if (isAfterStrikeThroughCooldown(currentStroke, stroke) && isOverIntersectingThreshold(currentStroke, stroke) && isStraightLine(currentStroke)) {
+        removeStrokes.push(stroke);
+      }
+    });
+    if (removeStrokes.length > 0) {
+      removeStrokes.push(currentStroke);
+      setStrokes(strokes.filter(stroke => !removeStrokes.includes(stroke)));
+      setUndoHistory([...undoHistory, {action: "Remove", strokes: removeStrokes.slice(0,-1)}]);
+      setRedoHistory([]);
+      setRedrawFlag(!redrawFlag);
+    }
+    else{
+      setUndoHistory([...undoHistory, {action: "Add", strokes:[currentStroke]}]);
+      setRedoHistory([]);
+    }
+  }, [checkStrikeThroughFlag]);
+
+  const isAfterStrikeThroughCooldown = (newStroke, oldStroke) => {
+    return (newStroke.timestamp - oldStroke.timestamp) > 2000;
+  };
+
+  const isOverIntersectingThreshold = (newStroke, oldStroke) => {
+    return IOU(newStroke, oldStroke) > 0.9;
+  };
+
+  const isStraightLine = (newStroke) => {
+    var totalLength = 0;
+    newStroke.points.forEach((point, index) => {
+      if (index > 0) {
+        const previousPoint = newStroke.points[index - 1];
+        totalLength += Math.sqrt(Math.pow(point.x - previousPoint.x, 2) + Math.pow(point.y - previousPoint.y, 2));
+      }
+    });
+    const endpointLength = Math.sqrt(Math.pow(newStroke.points[0].x - newStroke.points[newStroke.points.length - 1].x, 2) + Math.pow(newStroke.points[0].y - newStroke.points[newStroke.points.length - 1].y, 2));
+    return endpointLength / totalLength > 0.95;
+  };
+
+
+  const IOU = (newStroke, oldStroke) => {
+    const xA = Math.max(newStroke.minX, oldStroke.minX);
+    const yA = Math.max(newStroke.minY, oldStroke.minY);
+    const xB = Math.min(newStroke.maxX, oldStroke.maxX);
+    const yB = Math.min(newStroke.maxY, oldStroke.maxY);
+
+    const intersectionArea = Math.max(0, xB - xA+1) * Math.max(0, yB - yA+1);
+
+    const box1area = (newStroke.maxX - newStroke.minX + 1) * (newStroke.maxY - newStroke.minY + 1);
+    const box2area = (oldStroke.maxX - oldStroke.minX + 1) * (oldStroke.maxY - oldStroke.minY + 1);
+
+    const iou = intersectionArea / (box2area);
+    
+    return iou;
+  }
+
   const undo = () => {
     if (undoHistory.length === 0) {
       return;
@@ -103,10 +184,9 @@ export const CanvasProvider = ({ children }) => {
   };
 
   const redraw = () => {
-    console.log(strokes.length);
     clearCanvas();
     strokes.forEach(stroke => {
-      stroke.forEach((point, index) => {
+      stroke.points.forEach((point, index) => {
         if (index === 0) {
           contextRef.current.beginPath();
           contextRef.current.moveTo(point.x, point.y);
@@ -117,16 +197,6 @@ export const CanvasProvider = ({ children }) => {
       contextRef.current.stroke();
       contextRef.current.closePath();
     });
-  };
-
-  const draw = ({ nativeEvent }) => {
-    if (!isDrawing) {
-      return;
-    }
-    const { offsetX, offsetY } = nativeEvent;
-    contextRef.current.lineTo(offsetX, offsetY);
-    contextRef.current.stroke();
-    setCurrentStroke([...currentStroke, {x: offsetX, y: offsetY}]);
   };
 
 
@@ -142,6 +212,7 @@ export const CanvasProvider = ({ children }) => {
     if (!redraw) {
       setCurrentStroke([]);
       setUndoHistory([...undoHistory, {action: "Remove", strokes:[...strokes]}]);
+      setRedoHistory([]);
       setStrokes([]);
     }
   }
@@ -155,9 +226,9 @@ export const CanvasProvider = ({ children }) => {
       }
     }
     var X = [];
-    strokes.map(stroke => {X.push(stroke.map(point => point.x))});
+    strokes.map(stroke => {X.push(stroke.points.map(point => point.x))});
     var Y = [];
-    strokes.map(stroke => {Y.push(stroke.map(point => point.y))});
+    strokes.map(stroke => {Y.push(stroke.points.map(point => point.y))});
     
     return axios.post('https://api.mathpix.com/v3/strokes', 
     { 

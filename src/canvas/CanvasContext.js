@@ -201,7 +201,9 @@ export const CanvasProvider = ({ children }) => {
 
 
   const leaveCanvas = () => {
-    setIsDrawing(false);
+    if (isDrawing) {
+      finishDrawing();
+    }
   }
 
   const clearCanvas = (redraw=true) => {

@@ -1,5 +1,5 @@
 import { useCanvas } from './CanvasContext'
-import { useState } from 'react'
+import { MathpixLoader, MathpixMarkdown } from 'mathpix-markdown-it'
 
 export const ClearCanvasButton = () => {
   const { clearCanvas } = useCanvas()
@@ -9,19 +9,12 @@ export const ClearCanvasButton = () => {
   return <button onClick={handleClick}>Clear</button>
 }
 
-export const GetLatexButton = () => {
-  const [latexCode, setLatexCode] = useState('LaTeX code');
-  const { getLatex } = useCanvas();
-  const handleClick = async() => {
-    const response = await getLatex();
-    setLatexCode(response.data.latex_styled);
-  }
-
+export const LatexRenderer = () => {
+  const { latexCode } = useCanvas();
   return (
-    <div>
-    <button onClick={handleClick}> Get LaTeX</button>
-    <code>{latexCode}</code>
-    </div>
+    <MathpixLoader>
+      <MathpixMarkdown text={latexCode} />
+    </MathpixLoader>
   )
 }
 

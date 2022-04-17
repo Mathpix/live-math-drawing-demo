@@ -1,9 +1,10 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
-import axios from "axios";
+import {getLatex, getStrokesToken} from "./Api"
 
 const CanvasContext = React.createContext();
 
 export const CanvasProvider = ({ children }) => {
+  const [mathpixContext, setMathpixContext] = useState(null);
   const [isDrawing, setIsDrawing] = useState(false)
   const [strokes, setStrokes] = useState([]);
   const [currentStroke, setCurrentStroke] = useState([]);
@@ -79,6 +80,13 @@ export const CanvasProvider = ({ children }) => {
     setIsDrawing(false);
     setCheckStrikeThroughFlag(!checkStrikeThroughFlag);
   };
+
+  useEffect(() => {
+    async function fetchToken() {
+      console.log(await getStrokesToken());
+    }
+    fetchToken();
+  }, []);
 
   useEffect(() => {
     redraw();
@@ -250,34 +258,10 @@ export const CanvasProvider = ({ children }) => {
     clearTimeout(renderLatexTimeout);
     setRenderLatexTimeout (
       setTimeout(async () => {
-        const response = await getLatex();
+        const response = await getLatex(strokes);
         setLatexCode(response.data.text);
       }, time)
     )
-  }
-
-  const getLatex = async () => {
-    const config = {
-      headers: {
-        app_id: "mathpix_text_pdfs",
-        app_key: "YB7Z96XEJF1NRKVDMZVE",
-        "Content-Type": "application/json",
-      }
-    }
-    var X = [];
-    strokes.map(stroke => {X.push(stroke.points.map(point => point.x))});
-    var Y = [];
-    strokes.map(stroke => {Y.push(stroke.points.map(point => point.y))});
-    
-    return axios.post('https://api.mathpix.com/v3/strokes', 
-    { 
-      "strokes": {
-        "strokes": {
-          "x": X,
-          "y": Y
-        }
-      }
-    }, config)
   }
 
   return (

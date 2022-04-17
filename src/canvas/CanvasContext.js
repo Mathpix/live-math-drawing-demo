@@ -27,7 +27,7 @@ export const CanvasProvider = ({ children }) => {
     context.scale(2, 2);
     context.lineCap = "round";
     context.strokeStyle = "black";
-    context.lineWidth = 7;
+    context.lineWidth = 6;
     contextRef.current = context;
   };
 
@@ -113,6 +113,9 @@ export const CanvasProvider = ({ children }) => {
       if (isAfterStrikeThroughCooldown(currentStroke, stroke) && isOverIntersectingThreshold(currentStroke, stroke) && isStraightLine(currentStroke)) {
         removeStrokes.push(stroke);
       }
+      else if (isAfterStrikeThroughCooldown(currentStroke, stroke) && isOverIntersectingThreshold(currentStroke, stroke) && isSribble(currentStroke)){
+        removeStrokes.push(stroke);
+      }
     });
     if (removeStrokes.length > 0) {
       removeStrokes.push(currentStroke);
@@ -132,10 +135,18 @@ export const CanvasProvider = ({ children }) => {
   };
 
   const isOverIntersectingThreshold = (newStroke, oldStroke) => {
-    return IOU(newStroke, oldStroke) > 0.9;
+    return IOU(newStroke, oldStroke) > 0.85;
   };
 
   const isStraightLine = (newStroke) => {
+    return getDistanceRatio(newStroke) > 0.90;
+  };
+
+  const isSribble = (newStroke) => {
+    return getDistanceRatio(newStroke) < 0.3;
+  };
+
+  const getDistanceRatio = (newStroke) => {
     var totalLength = 0;
     newStroke.points.forEach((point, index) => {
       if (index > 0) {
@@ -144,8 +155,8 @@ export const CanvasProvider = ({ children }) => {
       }
     });
     const endpointLength = Math.sqrt(Math.pow(newStroke.points[0].x - newStroke.points[newStroke.points.length - 1].x, 2) + Math.pow(newStroke.points[0].y - newStroke.points[newStroke.points.length - 1].y, 2));
-    return endpointLength / totalLength > 0.95;
-  };
+    return endpointLength / totalLength
+  }
 
 
   const IOU = (newStroke, oldStroke) => {
@@ -156,7 +167,7 @@ export const CanvasProvider = ({ children }) => {
 
     const intersectionArea = Math.max(0, xB - xA+1) * Math.max(0, yB - yA+1);
 
-    const box1area = (newStroke.maxX - newStroke.minX + 1) * (newStroke.maxY - newStroke.minY + 1);
+    
     const box2area = (oldStroke.maxX - oldStroke.minX + 1) * (oldStroke.maxY - oldStroke.minY + 1);
 
     const iou = intersectionArea / (box2area);

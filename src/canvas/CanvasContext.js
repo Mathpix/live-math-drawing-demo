@@ -260,6 +260,16 @@ export const CanvasProvider = ({ children }) => {
       setTimeout(async () => {
         const response = await getLatex(strokes);
         setLatexCode(response.data.text);
+        if (!response.data.error) {
+          if (response.data.latex_styled) {
+            setLatexCode(`\\[${response.data.latex_styled}\\]`);
+          }
+          else {
+            setLatexCode(response.data.text);
+          }
+        } else {
+          console.log("API Error: ", response.data.error);
+        }
       }, time)
     )
   }

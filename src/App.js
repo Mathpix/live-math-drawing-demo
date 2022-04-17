@@ -1,6 +1,6 @@
 import React from 'react'
 import { Canvas } from './canvas/Canvas'
-import { ClearCanvasButton, LatexRenderer, UndoButton, RedoButton} from './canvas/Utils'
+import { ClearCanvasButton, LatexRenderer, UndoButton, RedoButton, CopyToClipboardButton} from './canvas/Utils'
 
 function App() {
   return (
@@ -9,6 +9,7 @@ function App() {
       <LatexRenderer/>
       <UndoButton />
       <RedoButton />
+      <CopyToClipboardButton />
       <Canvas/>
     </>
   );

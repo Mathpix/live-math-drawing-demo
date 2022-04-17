@@ -251,7 +251,12 @@ export const CanvasProvider = ({ children }) => {
     setRenderLatexTimeout (
       setTimeout(async () => {
         const response = await getLatex();
-        setLatexCode(response.data.text);
+        if (response.data.latex_styled) {
+          setLatexCode(`\\[${response.data.latex_styled}\\]`);
+        }
+        else {
+          setLatexCode(response.data.text);
+        }
       }, time)
     )
   }

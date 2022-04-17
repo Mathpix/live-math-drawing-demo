@@ -251,11 +251,15 @@ export const CanvasProvider = ({ children }) => {
     setRenderLatexTimeout (
       setTimeout(async () => {
         const response = await getLatex();
-        if (response.data.latex_styled) {
-          setLatexCode(`\\[${response.data.latex_styled}\\]`);
-        }
-        else {
-          setLatexCode(response.data.text);
+        if (!response.data.error) {
+          if (response.data.latex_styled) {
+            setLatexCode(`\\[${response.data.latex_styled}\\]`);
+          }
+          else {
+            setLatexCode(response.data.text);
+          }
+        } else {
+          console.log("API Error: ", response.data.error);
         }
       }, time)
     )

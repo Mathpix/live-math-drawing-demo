@@ -27,12 +27,14 @@ export const CanvasProvider = ({ children }) => {
     context.scale(2, 2);
     context.lineCap = "round";
     context.strokeStyle = "black";
-    context.lineWidth = 3;
+    context.lineWidth = 7;
     contextRef.current = context;
   };
 
   const startDrawing = ({ nativeEvent }) => {
     const { offsetX, offsetY } = nativeEvent;
+    contextRef.current.lineJoin = "round";
+    contextRef.current.lineCap = "round";
     contextRef.current.beginPath();
     contextRef.current.moveTo(offsetX, offsetY);
     setCurrentStroke({

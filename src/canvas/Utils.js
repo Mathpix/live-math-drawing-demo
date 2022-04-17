@@ -43,3 +43,13 @@ export const RedoButton = () => {
     </div>
   )
 }
+
+export const CopyToClipboardButton = () => {
+  const { latexCode } = useCanvas();
+  const handleClick = () => {
+    navigator.clipboard.writeText(latexCode);
+  }
+  return (
+    <button onClick={handleClick}>Copy LaTeX</button>
+  )
+}

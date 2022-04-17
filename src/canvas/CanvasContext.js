@@ -13,6 +13,9 @@ export const CanvasProvider = ({ children }) => {
   const [redoFlag, setRedoFlag] = useState(false);
   const [undoFlag, setUndoFlag] = useState(false);
   const [checkStrikeThroughFlag, setCheckStrikeThroughFlag] = useState(false);
+  const [renderLatexTimeout, setRenderLatexTimeout] = useState(null);
+  const [renderLatexFlag, setRenderLatexFlag] = useState(false);
+  const [latexCode, setLatexCode] = useState('LaTeX code');
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
 
@@ -79,6 +82,7 @@ export const CanvasProvider = ({ children }) => {
 
   useEffect(() => {
     redraw();
+    setRenderLatexFlag(!renderLatexFlag);
   }, [redrawFlag]);
 
   useEffect(() => {
@@ -128,6 +132,7 @@ export const CanvasProvider = ({ children }) => {
       setUndoHistory([...undoHistory, {action: "Add", strokes:[currentStroke]}]);
       setRedoHistory([]);
     }
+    setRenderLatexFlag(!renderLatexFlag);
   }, [checkStrikeThroughFlag]);
 
   const isAfterStrikeThroughCooldown = (newStroke, oldStroke) => {
@@ -230,6 +235,25 @@ export const CanvasProvider = ({ children }) => {
       setRedoHistory([]);
       setStrokes([]);
     }
+    setRenderLatexFlag(!renderLatexFlag);
+  }
+
+  useEffect (() => {
+    if (strokes.length > 0) {
+      getLatexTimedOut(100);
+    } else {
+      setLatexCode('LaTeX code');
+    }
+  }, [renderLatexFlag]);
+
+  const getLatexTimedOut = (time) => {
+    clearTimeout(renderLatexTimeout);
+    setRenderLatexTimeout (
+      setTimeout(async () => {
+        const response = await getLatex();
+        setLatexCode(response.data.text);
+      }, time)
+    )
   }
 
   const getLatex = async () => {
@@ -268,7 +292,7 @@ export const CanvasProvider = ({ children }) => {
         finishDrawing,
         leaveCanvas,
         clearCanvas,
-        getLatex,
+        latexCode,
         draw,
         undo,
         redo,

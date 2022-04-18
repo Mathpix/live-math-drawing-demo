@@ -1,7 +1,8 @@
 import React, { useEffect } from "react";
 import { useCanvas } from "./CanvasContext";
+import { ClearCanvasButton, LatexRenderer, UndoButton, RedoButton, CopyToClipboardButton} from './Utils'
 
-export function Canvas() {
+function CanvasInternal() {
   const {
     canvasRef,
     prepareCanvas,
@@ -23,5 +24,21 @@ export function Canvas() {
       onMouseOut={leaveCanvas}
       ref={canvasRef}
     />
+  );
+}
+
+export function Canvas() {
+
+  
+
+  return (
+    <>
+      <ClearCanvasButton/>
+      <LatexRenderer/>
+      <UndoButton />
+      <RedoButton />
+      <CopyToClipboardButton />
+      <CanvasInternal/>
+    </>
   );
 }

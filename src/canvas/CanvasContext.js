@@ -16,7 +16,7 @@ export const CanvasProvider = ({ children }) => {
   const [checkStrikeThroughFlag, setCheckStrikeThroughFlag] = useState(false);
   const [renderLatexTimeout, setRenderLatexTimeout] = useState(null);
   const [renderLatexFlag, setRenderLatexFlag] = useState(false);
-  const [latexCode, setLatexCode] = useState('LaTeX code');
+  const [latexCode, setLatexCode] = useState("");
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
 
@@ -81,12 +81,19 @@ export const CanvasProvider = ({ children }) => {
     setCheckStrikeThroughFlag(!checkStrikeThroughFlag);
   };
 
+  const fetchToken = async () => {
+    return (await getStrokesToken());
+  }
+
   useEffect(() => {
-    async function fetchToken() {
-      console.log(await getStrokesToken());
+    const tokenContext = fetchToken();
+    if (tokenContext !== null) {
+      setMathpixContext(tokenContext);
     }
-    fetchToken();
-  }, []);
+    else{
+      setTimeout(fetchToken, 2000);
+    }
+  }, [mathpixContext]);
 
   useEffect(() => {
     redraw();
@@ -247,10 +254,15 @@ export const CanvasProvider = ({ children }) => {
   }
 
   useEffect (() => {
-    if (strokes.length > 0) {
-      getLatexTimedOut(100);
-    } else {
-      setLatexCode('LaTeX code');
+    if (mathpixContext !== null){
+      if (strokes.length > 0) {
+        getLatexTimedOut(100);
+      } else {
+        setLatexCode('\\[\\text{ Draw your math below }\\]');
+      }
+    }
+    else{
+      setLatexCode('\\[\\text{ Connecting to Mathpix... }\\]');
     }
   }, [renderLatexFlag]);
 
@@ -259,8 +271,7 @@ export const CanvasProvider = ({ children }) => {
     setRenderLatexTimeout (
       setTimeout(async () => {
         const response = await getLatex(strokes);
-        setLatexCode(response.data.text);
-        if (!response.data.error) {
+        if (!response.data.error) { 
           if (response.data.latex_styled) {
             setLatexCode(`\\[${response.data.latex_styled}\\]`);
           }
@@ -281,6 +292,7 @@ export const CanvasProvider = ({ children }) => {
         contextRef,
         undoHistory,
         redoHistory,
+        mathpixContext,
         prepareCanvas,
         startDrawing,
         finishDrawing,

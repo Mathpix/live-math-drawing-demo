@@ -1,5 +1,6 @@
 import { useCanvas } from './CanvasContext'
 import { MathpixLoader, MathpixMarkdown } from 'mathpix-markdown-it'
+import './canvas.css'
 
 export const ClearCanvasButton = () => {
   const { clearCanvas, strokes } = useCanvas()
@@ -12,9 +13,11 @@ export const ClearCanvasButton = () => {
 export const LatexRenderer = () => {
   const { latexCode } = useCanvas();
   return (
-    <MathpixLoader>
-      <MathpixMarkdown text={latexCode} />
-    </MathpixLoader>
+    <div className='latex-renderer-container'>
+      <MathpixLoader >
+        <MathpixMarkdown text={latexCode} />
+      </MathpixLoader>
+    </div>  
   )
 }
 

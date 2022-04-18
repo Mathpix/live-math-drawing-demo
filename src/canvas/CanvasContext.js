@@ -35,6 +35,14 @@ export const CanvasProvider = ({ children }) => {
     context.strokeStyle = "black";
     context.lineWidth = 6;
     contextRef.current = context;
+
+    const bgImage = new Image();
+    bgImage.src = "http://draw.mathpix.com/images/background.png?v=4.4.0.1980";
+    bgImage.onload = () => {
+      const pattern = context.createPattern(bgImage, "repeat");
+      context.fillStyle = pattern;
+      context.fillRect(0, 0, canvas.width, canvas.height);
+    }
   };
 
   const startDrawing = ({ nativeEvent }) => {
@@ -255,6 +263,15 @@ export const CanvasProvider = ({ children }) => {
     const context = canvas.getContext("2d")
     context.fillStyle = "white"
     context.fillRect(0, 0, canvas.width, canvas.height)
+
+    const bgImage = new Image();
+    bgImage.src = "http://draw.mathpix.com/images/background.png?v=4.4.0.1980";
+    bgImage.onload = () => {
+      const pattern = context.createPattern(bgImage, "repeat");
+      context.fillStyle = pattern;
+      context.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    
     if (!redraw) {
       setCurrentStroke([]);
       setUndoHistory([...undoHistory, {action: "Remove", strokes:[...strokes]}]);

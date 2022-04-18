@@ -6,9 +6,13 @@
 
 .latex-renderer-container {
     margin: auto;
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     background-color: #F2F2F5;
+    height: 20vh;
+    font-size: 35px;
 }
 
 .canvas-buttons-container {

@@ -8,7 +8,7 @@ export const CanvasProvider = ({ children }) => {
   const [tokenRequestFlag, setTokenRequestFlag] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false)
   const [strokes, setStrokes] = useState([]);
-  const [currentStroke, setCurrentStroke] = useState([]);
+  const [currentStroke, setCurrentStroke] = useState(null);
   const [undoHistory, setUndoHistory] = useState([]);
   const [redoHistory, setRedoHistory] = useState([]);
   const [redrawFlag, setRedrawFlag] = useState(false);
@@ -19,15 +19,16 @@ export const CanvasProvider = ({ children }) => {
   const [tokenRefreshTimeout, setTokenRefreshTimeout] = useState(null);
   const [renderLatexFlag, setRenderLatexFlag] = useState(false);
   const [latexCode, setLatexCode] = useState("");
+  const [pattern, setPattern] = useState(null);
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
 
   const prepareCanvas = () => {
     const canvas = canvasRef.current
-    canvas.width = window.innerWidth * 2;
-    canvas.height = window.innerHeight * 2;
+    canvas.width = window.innerWidth*2;
+    canvas.height = window.innerHeight*1.5;
     canvas.style.width = `${window.innerWidth}px`;
-    canvas.style.height = `${window.innerHeight}px`;
+    canvas.style.height = `${window.innerHeight*0.75}px`;
 
     const context = canvas.getContext("2d")
     context.scale(2, 2);
@@ -39,9 +40,10 @@ export const CanvasProvider = ({ children }) => {
     const bgImage = new Image();
     bgImage.src = "http://draw.mathpix.com/images/background.png?v=4.4.0.1980";
     bgImage.onload = () => {
-      const pattern = context.createPattern(bgImage, "repeat");
-      context.fillStyle = pattern;
+      const bgpattern = context.createPattern(bgImage, "repeat");
+      context.fillStyle = bgpattern;
       context.fillRect(0, 0, canvas.width, canvas.height);
+      setPattern(bgpattern);
     }
   };
 
@@ -162,8 +164,10 @@ export const CanvasProvider = ({ children }) => {
       setRedoHistory([]);
       setRedrawFlag(!redrawFlag);
     }
-    else{
-      setUndoHistory([...undoHistory, {action: "Add", strokes:[currentStroke]}]);
+    else {
+      if (currentStroke !== null) {
+        setUndoHistory([...undoHistory, {action: "Add", strokes:[currentStroke]}]);
+      }
       setRedoHistory([]);
     }
     setRenderLatexFlag(!renderLatexFlag);
@@ -261,16 +265,12 @@ export const CanvasProvider = ({ children }) => {
   const clearCanvas = (redraw=true) => {
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d")
+
+   
     context.fillStyle = "white"
     context.fillRect(0, 0, canvas.width, canvas.height)
-
-    const bgImage = new Image();
-    bgImage.src = "http://draw.mathpix.com/images/background.png?v=4.4.0.1980";
-    bgImage.onload = () => {
-      const pattern = context.createPattern(bgImage, "repeat");
-      context.fillStyle = pattern;
-      context.fillRect(0, 0, canvas.width, canvas.height);
-    }
+    context.fillStyle = pattern;
+    context.fillRect(0, 0, canvas.width, canvas.height);
     
     if (!redraw) {
       setCurrentStroke([]);

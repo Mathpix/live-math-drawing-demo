@@ -2,11 +2,11 @@ import { useCanvas } from './CanvasContext'
 import { MathpixLoader, MathpixMarkdown } from 'mathpix-markdown-it'
 
 export const ClearCanvasButton = () => {
-  const { clearCanvas } = useCanvas()
+  const { clearCanvas, strokes } = useCanvas()
   const handleClick = () => {
     clearCanvas(false);
   }
-  return <button onClick={handleClick}>Clear</button>
+  return <button onClick={handleClick} disabled={strokes.length === 0}>Clear</button>
 }
 
 export const LatexRenderer = () => {

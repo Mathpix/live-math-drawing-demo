@@ -5,6 +5,7 @@ const CanvasContext = React.createContext();
 
 export const CanvasProvider = ({ children }) => {
   const [mathpixContext, setMathpixContext] = useState(null);
+  const [tokenRequestFlag, setTokenRequestFlag] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false)
   const [strokes, setStrokes] = useState([]);
   const [currentStroke, setCurrentStroke] = useState([]);
@@ -15,6 +16,7 @@ export const CanvasProvider = ({ children }) => {
   const [undoFlag, setUndoFlag] = useState(false);
   const [checkStrikeThroughFlag, setCheckStrikeThroughFlag] = useState(false);
   const [renderLatexTimeout, setRenderLatexTimeout] = useState(null);
+  const [tokenRefreshTimeout, setTokenRefreshTimeout] = useState(null);
   const [renderLatexFlag, setRenderLatexFlag] = useState(false);
   const [latexCode, setLatexCode] = useState("");
   const canvasRef = useRef(null);
@@ -82,18 +84,27 @@ export const CanvasProvider = ({ children }) => {
   };
 
   const fetchToken = async () => {
-    return (await getStrokesToken());
+    return await getStrokesToken();
   }
 
   useEffect(() => {
-    const tokenContext = fetchToken();
-    if (tokenContext !== null) {
-      setMathpixContext(tokenContext);
-    }
-    else{
-      setTimeout(fetchToken, 2000);
-    }
-  }, [mathpixContext]);
+    const f = async () => {
+      const tokenContext = await fetchToken();
+      if (tokenContext !== null) {
+        setMathpixContext(tokenContext);
+        setTokenRefreshTimeout(setTimeout(() => {
+          setTokenRequestFlag(true);
+        }, tokenContext.app_token_expires_at - Date.now() - 5000));
+        setLatexCode('\\[\\text{ Draw your math below }\\]');
+      }
+      else{
+        setTimeout(() => {
+          setTokenRequestFlag(!tokenRequestFlag);
+        }, 2000);
+      }
+    };
+    f();
+  }, [tokenRequestFlag]);
 
   useEffect(() => {
     redraw();
@@ -249,6 +260,8 @@ export const CanvasProvider = ({ children }) => {
       setUndoHistory([...undoHistory, {action: "Remove", strokes:[...strokes]}]);
       setRedoHistory([]);
       setStrokes([]);
+      clearTimeout(tokenRefreshTimeout);
+      setTokenRequestFlag(!tokenRequestFlag);
     }
     setRenderLatexFlag(!renderLatexFlag);
   }
@@ -270,7 +283,7 @@ export const CanvasProvider = ({ children }) => {
     clearTimeout(renderLatexTimeout);
     setRenderLatexTimeout (
       setTimeout(async () => {
-        const response = await getLatex(strokes);
+        const response = await getLatex(mathpixContext, strokes);
         if (!response.data.error) { 
           if (response.data.latex_styled) {
             setLatexCode(`\\[${response.data.latex_styled}\\]`);
@@ -290,15 +303,16 @@ export const CanvasProvider = ({ children }) => {
       value={{
         canvasRef,
         contextRef,
+        strokes,
         undoHistory,
         redoHistory,
         mathpixContext,
+        latexCode,
         prepareCanvas,
         startDrawing,
         finishDrawing,
         leaveCanvas,
         clearCanvas,
-        latexCode,
         draw,
         undo,
         redo,

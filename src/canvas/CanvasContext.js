@@ -1,8 +1,9 @@
 import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
 import {getLatex, getStrokesToken} from "./Api"
+import CanvasBackground from "../background.png"
 
 const CanvasContext = React.createContext();
-var currentStroke = {};
+var currentStroke = null;
 
 export const CanvasProvider = ({ children }) => {
   const [mathpixContext, setMathpixContext] = useState(null);
@@ -42,7 +43,7 @@ export const CanvasProvider = ({ children }) => {
     contextRef.current = context;
 
     const bgImage = new Image();
-    bgImage.src = "http://draw.mathpix.com/images/background.png?v=4.4.0.1980";
+    bgImage.src = CanvasBackground;
     bgImage.onload = () => {
       const bgpattern = context.createPattern(bgImage, "repeat");
       context.fillStyle = bgpattern;
@@ -222,6 +223,7 @@ export const CanvasProvider = ({ children }) => {
   useEffect(() => {
     const redoStrokes = undoHistory[undoHistory.length - 1];
     if (redoStrokes) {
+      console.log("here");
       if (redoStrokes.action === "Add") {
         setStrokes([...strokes, ...redoStrokes.strokes]);
       }
@@ -235,6 +237,7 @@ export const CanvasProvider = ({ children }) => {
   useEffect(() => {
     const undoStrokes = redoHistory[redoHistory.length - 1];
     if (undoStrokes) {
+      console.log("here2");
       if (undoStrokes.action === "Add") {
         setStrokes(strokes.filter(stroke => !undoStrokes.strokes.includes(stroke)));
       } else if (undoStrokes.action === "Remove") {
@@ -377,7 +380,7 @@ export const CanvasProvider = ({ children }) => {
   useEffect (() => {
     if (mathpixContext !== null){
       if (strokes.length > 0) {
-        getLatexTimedOut(1000);
+        getLatexTimedOut(100);
       } else {
         clearTimeout(renderLatexTimeout);
         setLatex(

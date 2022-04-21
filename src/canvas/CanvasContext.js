@@ -115,7 +115,6 @@ export const CanvasProvider = ({ children }) => {
   const finishDrawing = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log(currentStroke, currentStroke);
     setStrokes([...strokes, currentStroke]);
     contextRef.current.closePath();
     setIsDrawing(false);

@@ -31,3 +31,7 @@
 body{
     user-select: none;
 }
+
+.canvas-buttons {
+    font-size: 30px;
+}

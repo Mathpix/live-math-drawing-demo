@@ -6,11 +6,7 @@ import './canvas.css'
 function CanvasInternal() {
   const {
     canvasRef,
-    prepareCanvas,
-    startDrawing,
-    finishDrawing,
-    leaveCanvas,
-    draw,
+    prepareCanvas
   } = useCanvas();
 
   useEffect(() => {

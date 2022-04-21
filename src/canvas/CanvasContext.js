@@ -34,7 +34,7 @@ export const CanvasProvider = ({ children }) => {
     canvas.style.width = `${w}px`;
     canvas.style.height = `${h*0.75}px`;
 
-    const context = canvas.getContext("2d")
+    const context = canvas.getContext("2d");
     context.scale(2, 2);
     context.lineCap = "round";
     context.strokeStyle = "black";
@@ -48,7 +48,8 @@ export const CanvasProvider = ({ children }) => {
       context.fillStyle = bgpattern;
       context.fillRect(0, 0, canvas.width, canvas.height);
       setPattern(bgpattern);
-    }
+    };
+
     setCanvasPrepared(true);
   };
 
@@ -127,6 +128,33 @@ export const CanvasProvider = ({ children }) => {
       finishDrawing(e);
     }
   };
+
+  const windowResize = (event) => {
+      const canvas = canvasRef.current;
+      var w = document.documentElement.clientWidth -20;
+      var h = document.documentElement.clientHeight;
+  
+      canvas.width = w*2;
+      canvas.height = h*1.5;
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h*0.75}px`;
+  
+      const context = canvas.getContext("2d");
+      context.scale(2, 2);
+      context.lineCap = "round";
+      context.strokeStyle = "black";
+      context.lineWidth = 6;
+      setRedrawFlag(!redrawFlag);
+    };
+  
+
+  useEffect(() => {
+    window.addEventListener('resize', windowResize);
+    return () => {
+      window.removeEventListener('resize', windowResize);
+    }
+  },[redrawFlag]);
+
   
   useEffect(() => {
     if (canvasRef.current !== null) {
@@ -347,6 +375,7 @@ export const CanvasProvider = ({ children }) => {
       if (strokes.length > 0) {
         getLatexTimedOut(1000);
       } else {
+        clearTimeout(renderLatexTimeout);
         setLatexCode('\\[\\text{ Draw your math below }\\]');
       }
     }

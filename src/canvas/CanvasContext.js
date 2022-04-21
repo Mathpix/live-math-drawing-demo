@@ -18,7 +18,7 @@ export const CanvasProvider = ({ children }) => {
   const [renderLatexTimeout, setRenderLatexTimeout] = useState(null);
   const [tokenRefreshTimeout, setTokenRefreshTimeout] = useState(null);
   const [renderLatexFlag, setRenderLatexFlag] = useState(false);
-  const [latexCode, setLatexCode] = useState("");
+  const [latex, setLatex] = useState({code: "", isPlaceholder: true});
   const [pattern, setPattern] = useState(null);
   const [canvasPrepared, setCanvasPrepared] = useState(false);
   const canvasRef = useRef(null);
@@ -198,7 +198,12 @@ export const CanvasProvider = ({ children }) => {
         setTokenRefreshTimeout(setTimeout(() => {
           setTokenRequestFlag(true);
         }, tokenContext.app_token_expires_at - Date.now() - 5000));
-        setLatexCode('\\[\\text{ Draw your math below }\\]');
+        setLatex(
+          {
+            code: '\\[\\text{ Draw your math below }\\]',
+            isPlaceholder: true,
+          }
+        )
       }
       else{
         setTimeout(() => {
@@ -376,11 +381,21 @@ export const CanvasProvider = ({ children }) => {
         getLatexTimedOut(1000);
       } else {
         clearTimeout(renderLatexTimeout);
-        setLatexCode('\\[\\text{ Draw your math below }\\]');
+        setLatex(
+          {
+            code: '\\[\\text{ Draw your math below }\\]',
+            isPlaceholder: true,
+          }
+        )
       }
     }
     else{
-      setLatexCode('\\[\\text{ Connecting to Mathpix... }\\]');
+      setLatex(
+        {
+          code: '\\[\\text{ Connecting to Mathpix... }\\]',
+          isPlaceholder: true,
+        }
+      )
     }
   }, [renderLatexFlag]);
 
@@ -391,10 +406,20 @@ export const CanvasProvider = ({ children }) => {
         const response = await getLatex(mathpixContext, strokes);
         if (!response.data.error) { 
           if (response.data.latex_styled) {
-            setLatexCode(`\\[${response.data.latex_styled}\\]`);
+            setLatex(
+              {
+                code: `\\[${response.data.latex_styled}\\]`,
+                isPlaceholder: false,
+              }
+            )
           }
           else {
-            setLatexCode(response.data.text);
+            setLatex(
+              {
+                code: response.data.text,
+                isPlaceholder: false,
+              }
+            )
           }
         } else {
           console.log("API Error: ", response.data.error);
@@ -412,7 +437,7 @@ export const CanvasProvider = ({ children }) => {
         undoHistory,
         redoHistory,
         mathpixContext,
-        latexCode,
+        latex,
         prepareCanvas,
         startDrawing,
         finishDrawing,

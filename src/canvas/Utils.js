@@ -22,11 +22,11 @@ export const ClearCanvasButton = () => {
 }
 
 export const LatexRenderer = () => {
-  const { latexCode } = useCanvas();
+  const { latex } = useCanvas();
   return (
     <div className='latex-renderer-container'>
       <MathpixLoader >
-        <MathpixMarkdown text={latexCode} />
+        <MathpixMarkdown text={latex.code} />
       </MathpixLoader>
     </div>  
   )
@@ -67,14 +67,14 @@ export const RedoButton = () => {
 }
 
 export const CopyToClipboardButton = () => {
-  const { latexCode } = useCanvas();
+  const { latex } = useCanvas();
   const handleClick = () => {
-    navigator.clipboard.writeText(latexCode);
+    navigator.clipboard.writeText(latex.code);
   }
 
   return (
     <Tooltip title="Copy LaTeX to Clipboard">
-      <IconButton onClick={handleClick} color="primary">
+      <IconButton onClick={handleClick} disabled={latex.isPlaceholder} color="primary">
         <div className='canvas-buttons'>
           <ContentCopyOutlined fontSize="inherit" />
         </div>

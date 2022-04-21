@@ -1,5 +1,8 @@
 import { useCanvas } from './CanvasContext'
 import { MathpixLoader, MathpixMarkdown } from 'mathpix-markdown-it'
+import { IconButton } from '@mui/material'
+import { DeleteOutline, UndoOutlined, RedoOutlined, ContentCopyOutlined } from '@mui/icons-material'
+import Tooltip from '@mui/material/Tooltip';
 import './canvas.css'
 
 export const ClearCanvasButton = () => {
@@ -7,7 +10,15 @@ export const ClearCanvasButton = () => {
   const handleClick = () => {
     clearCanvas(false);
   }
-  return <button onClick={handleClick} disabled={strokes.length === 0}>Clear</button>
+  return (
+    <Tooltip title="Clear Drawing">
+      <IconButton onClick={handleClick} disabled={strokes.length === 0} color="primary">
+        <div className='canvas-buttons'>
+          <DeleteOutline fontSize="inherit" />
+        </div>
+      </IconButton>
+    </Tooltip>
+  )
 }
 
 export const LatexRenderer = () => {
@@ -28,9 +39,13 @@ export const UndoButton = () => {
   }
 
   return (
-    <div>
-    <button onClick={handleClick} disabled={undoHistory.length === 0}> Undo</button>
-    </div>
+    <Tooltip title="Undo">
+      <IconButton onClick={handleClick} disabled={undoHistory.length === 0} color="primary">
+        <div className='canvas-buttons'>
+          <UndoOutlined fontSize="inherit" />
+        </div>
+      </IconButton>
+    </Tooltip>
   )
 }
 
@@ -41,9 +56,13 @@ export const RedoButton = () => {
   }
 
   return (
-    <div>
-    <button onClick={handleClick} disabled={redoHistory.length === 0}> Redo</button>
-    </div>
+    <Tooltip title="Redo">
+      <IconButton onClick={handleClick} disabled={redoHistory.length === 0} color="primary">
+        <div className='canvas-buttons'>
+          <RedoOutlined fontSize="inherit" />
+        </div>
+      </IconButton>
+    </Tooltip>
   )
 }
 
@@ -52,7 +71,14 @@ export const CopyToClipboardButton = () => {
   const handleClick = () => {
     navigator.clipboard.writeText(latexCode);
   }
+
   return (
-    <button onClick={handleClick}>Copy LaTeX</button>
+    <Tooltip title="Copy LaTeX to Clipboard">
+      <IconButton onClick={handleClick} color="primary">
+        <div className='canvas-buttons'>
+          <ContentCopyOutlined fontSize="inherit" />
+        </div>
+      </IconButton>
+    </Tooltip>
   )
 }

@@ -2,13 +2,13 @@ import React, { useCallback, useContext, useEffect, useRef, useState } from "rea
 import {getLatex, getStrokesToken} from "./Api"
 
 const CanvasContext = React.createContext();
+var currentStroke = {};
 
 export const CanvasProvider = ({ children }) => {
   const [mathpixContext, setMathpixContext] = useState(null);
   const [tokenRequestFlag, setTokenRequestFlag] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false)
   const [strokes, setStrokes] = useState([]);
-  const [currentStroke, setCurrentStroke] = useState(null);
   const [undoHistory, setUndoHistory] = useState([]);
   const [redoHistory, setRedoHistory] = useState([]);
   const [redrawFlag, setRedrawFlag] = useState(false);
@@ -68,15 +68,15 @@ export const CanvasProvider = ({ children }) => {
     contextRef.current.lineCap = "round";
     contextRef.current.beginPath();
     contextRef.current.moveTo(offsetX, offsetY);
-    
-    setCurrentStroke({
+
+    currentStroke = {
       points: [{x: offsetX, y: offsetY}],
       minX: offsetX,
       minY: offsetY,
       maxX: offsetX,
       maxY: offsetY,
       timestamp: Date.now()
-    });
+    };
     setIsDrawing(true);
   };
 
@@ -102,19 +102,20 @@ export const CanvasProvider = ({ children }) => {
     const maxX = Math.max(offsetX, currentStroke.maxX);
     const maxY = Math.max(offsetY, currentStroke.maxY);
 
-    setCurrentStroke({
+    currentStroke = {
       points: [...currentStroke.points,{x: offsetX, y: offsetY}],
       minX: minX,
       minY: minY,
       maxX: maxX,
       maxY: maxY,
       timestamp: Date.now()
-    });
+    };
   };
 
   const finishDrawing = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    console.log(currentStroke, currentStroke);
     setStrokes([...strokes, currentStroke]);
     contextRef.current.closePath();
     setIsDrawing(false);
@@ -184,7 +185,7 @@ export const CanvasProvider = ({ children }) => {
         canvas.removeEventListener("touchcancel", leaveCanvas, { passive: false });
       }
     }
-  }, [isDrawing, strokes, currentStroke, checkStrikeThroughFlag, canvasPrepared]);
+  }, [isDrawing, strokes, checkStrikeThroughFlag, canvasPrepared]);
 
   const fetchToken = async () => {
     return await getStrokesToken();
@@ -365,7 +366,6 @@ export const CanvasProvider = ({ children }) => {
     context.fillRect(0, 0, canvas.width, canvas.height);
     
     if (!redraw) {
-      setCurrentStroke([]);
       setUndoHistory([...undoHistory, {action: "Remove", strokes:[...strokes]}]);
       setRedoHistory([]);
       setStrokes([]);

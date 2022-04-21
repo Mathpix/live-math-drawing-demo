@@ -1,7 +1,13 @@
-.canvas {
+.canvas-container {
     border-top: 2px solid gray;
+    display: block;
+}
+
+.canvas {
+    padding: 0;
     margin: auto;
     display: block;
+    touch-action: none;
 }
 
 .latex-renderer-container {
@@ -11,7 +17,7 @@
     justify-content: center;
     text-align: center;
     background-color: #F2F2F5;
-    height: 20vh;
+    height: 19vh;
     font-size: 35px;
 }
 
@@ -20,4 +26,8 @@
     float: left;
     margin-top: 10px;
     margin-bottom: 3px;
+}
+
+body{
+    user-select: none;
 }

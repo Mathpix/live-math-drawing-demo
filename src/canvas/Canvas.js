@@ -18,14 +18,12 @@ function CanvasInternal() {
   }, []);
 
   return (
-    <canvas
-      onMouseDown={startDrawing}
-      onMouseUp={finishDrawing}
-      onMouseMove={draw}
-      onMouseOut={leaveCanvas}
-      ref={canvasRef}
-      className="canvas"
-    />
+    <div className="canvas-container">
+      <canvas
+        ref={canvasRef}
+        className="canvas"
+      />
+    </div>
   );
 }
 

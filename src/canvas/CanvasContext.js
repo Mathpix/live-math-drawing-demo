@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
 import {getLatex, getStrokesToken} from "./Api"
 
 const CanvasContext = React.createContext();
@@ -20,15 +20,19 @@ export const CanvasProvider = ({ children }) => {
   const [renderLatexFlag, setRenderLatexFlag] = useState(false);
   const [latexCode, setLatexCode] = useState("");
   const [pattern, setPattern] = useState(null);
+  const [canvasPrepared, setCanvasPrepared] = useState(false);
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
 
   const prepareCanvas = () => {
-    const canvas = canvasRef.current
-    canvas.width = window.innerWidth*2;
-    canvas.height = window.innerHeight*1.5;
-    canvas.style.width = `${window.innerWidth}px`;
-    canvas.style.height = `${window.innerHeight*0.75}px`;
+    const canvas = canvasRef.current;
+    var w = document.documentElement.clientWidth -20;
+    var h = document.documentElement.clientHeight;
+
+    canvas.width = w*2;
+    canvas.height = h*1.5;
+    canvas.style.width = `${w}px`;
+    canvas.style.height = `${h*0.75}px`;
 
     const context = canvas.getContext("2d")
     context.scale(2, 2);
@@ -45,14 +49,25 @@ export const CanvasProvider = ({ children }) => {
       context.fillRect(0, 0, canvas.width, canvas.height);
       setPattern(bgpattern);
     }
+    setCanvasPrepared(true);
   };
 
-  const startDrawing = ({ nativeEvent }) => {
-    const { offsetX, offsetY } = nativeEvent;
+  const startDrawing = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.offsetX !== undefined && e.offsetY !== undefined) {
+      var { offsetX, offsetY } = e;
+    }
+    else {
+      var bcr = e.target.getBoundingClientRect();
+      var offsetX = e.targetTouches[0].clientX - bcr.x;
+      var offsetY = e.targetTouches[0].clientY - bcr.y;
+    }
     contextRef.current.lineJoin = "round";
     contextRef.current.lineCap = "round";
     contextRef.current.beginPath();
     contextRef.current.moveTo(offsetX, offsetY);
+    
     setCurrentStroke({
       points: [{x: offsetX, y: offsetY}],
       minX: offsetX,
@@ -64,11 +79,21 @@ export const CanvasProvider = ({ children }) => {
     setIsDrawing(true);
   };
 
-  const draw = ({ nativeEvent }) => {
+  const draw = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (!isDrawing) {
       return;
     }
-    const { offsetX, offsetY } = nativeEvent;
+    if (e.offsetX !== undefined && e.offsetY !== undefined) {
+      var { offsetX, offsetY } = e;
+    }
+    else {
+      var bcr = e.target.getBoundingClientRect();
+      var offsetX = e.targetTouches[0].clientX - bcr.x;
+      var offsetY = e.targetTouches[0].clientY - bcr.y;
+    }
+
     contextRef.current.lineTo(offsetX, offsetY);
     contextRef.current.stroke();
     const minX = Math.min(offsetX, currentStroke.minX);
@@ -86,12 +111,52 @@ export const CanvasProvider = ({ children }) => {
     });
   };
 
-  const finishDrawing = () => {
+  const finishDrawing = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     setStrokes([...strokes, currentStroke]);
     contextRef.current.closePath();
     setIsDrawing(false);
     setCheckStrikeThroughFlag(!checkStrikeThroughFlag);
   };
+
+  const leaveCanvas = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isDrawing) {
+      finishDrawing(e);
+    }
+  };
+  
+  useEffect(() => {
+    if (canvasRef.current !== null) {
+      const canvas = canvasRef.current;
+      
+      canvas.addEventListener("mousedown", startDrawing, { passive: false });
+      canvas.addEventListener("mousemove", draw, { passive: false });
+      canvas.addEventListener("mouseup",  finishDrawing, { passive: false });
+      canvas.addEventListener("mouseleave", leaveCanvas, { passive: false });
+      
+      canvas.addEventListener("touchstart", startDrawing, { passive: false });
+      canvas.addEventListener("touchmove", draw, { passive: false });
+      canvas.addEventListener("touchend",  finishDrawing, { passive: false });
+      canvas.addEventListener("touchleave", leaveCanvas, { passive: false });
+    }
+    return () => {
+      if (canvasRef.current !== null) {
+        const canvas = canvasRef.current;
+        canvas.removeEventListener("mousedown", startDrawing, { passive: false });
+        canvas.removeEventListener("mousemove", draw, { passive: false });
+        canvas.removeEventListener("mouseup",   finishDrawing, { passive: false });
+        canvas.removeEventListener("mouseleave", leaveCanvas, { passive: false });
+
+        canvas.removeEventListener("touchstart", startDrawing, { passive: false });
+        canvas.removeEventListener("touchmove", draw, { passive: false });
+        canvas.removeEventListener("touchend", finishDrawing, { passive: false });
+        canvas.removeEventListener("touchcancel", leaveCanvas, { passive: false });
+      }
+    }
+  }, [isDrawing, strokes, currentStroke, checkStrikeThroughFlag, canvasPrepared]);
 
   const fetchToken = async () => {
     return await getStrokesToken();
@@ -256,12 +321,6 @@ export const CanvasProvider = ({ children }) => {
   };
 
 
-  const leaveCanvas = () => {
-    if (isDrawing) {
-      finishDrawing();
-    }
-  }
-
   const clearCanvas = (redraw=true) => {
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d")
@@ -286,7 +345,7 @@ export const CanvasProvider = ({ children }) => {
   useEffect (() => {
     if (mathpixContext !== null){
       if (strokes.length > 0) {
-        getLatexTimedOut(100);
+        getLatexTimedOut(1000);
       } else {
         setLatexCode('\\[\\text{ Draw your math below }\\]');
       }

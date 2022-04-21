@@ -131,7 +131,7 @@ export const CanvasProvider = ({ children }) => {
 
   const windowResize = (event) => {
       const canvas = canvasRef.current;
-      var w = document.documentElement.clientWidth -20;
+      var w = document.documentElement.clientWidth - 20;
       var h = document.documentElement.clientHeight;
   
       canvas.width = w*2;
@@ -160,28 +160,28 @@ export const CanvasProvider = ({ children }) => {
     if (canvasRef.current !== null) {
       const canvas = canvasRef.current;
       
-      canvas.addEventListener("mousedown", startDrawing, { passive: false });
-      canvas.addEventListener("mousemove", draw, { passive: false });
-      canvas.addEventListener("mouseup",  finishDrawing, { passive: false });
-      canvas.addEventListener("mouseleave", leaveCanvas, { passive: false });
+      canvas.addEventListener("mousedown", startDrawing);
+      canvas.addEventListener("mousemove", draw,);
+      canvas.addEventListener("mouseup",  finishDrawing);
+      canvas.addEventListener("mouseleave", leaveCanvas);
       
-      canvas.addEventListener("touchstart", startDrawing, { passive: false });
-      canvas.addEventListener("touchmove", draw, { passive: false });
-      canvas.addEventListener("touchend",  finishDrawing, { passive: false });
-      canvas.addEventListener("touchleave", leaveCanvas, { passive: false });
+      canvas.addEventListener("touchstart", startDrawing);
+      canvas.addEventListener("touchmove", draw);
+      canvas.addEventListener("touchend",  finishDrawing);
+      canvas.addEventListener("touchleave", leaveCanvas);
     }
     return () => {
       if (canvasRef.current !== null) {
         const canvas = canvasRef.current;
-        canvas.removeEventListener("mousedown", startDrawing, { passive: false });
-        canvas.removeEventListener("mousemove", draw, { passive: false });
-        canvas.removeEventListener("mouseup",   finishDrawing, { passive: false });
-        canvas.removeEventListener("mouseleave", leaveCanvas, { passive: false });
+        canvas.removeEventListener("mousedown", startDrawing);
+        canvas.removeEventListener("mousemove", draw);
+        canvas.removeEventListener("mouseup",   finishDrawing);
+        canvas.removeEventListener("mouseleave", leaveCanvas);
 
-        canvas.removeEventListener("touchstart", startDrawing, { passive: false });
-        canvas.removeEventListener("touchmove", draw, { passive: false });
-        canvas.removeEventListener("touchend", finishDrawing, { passive: false });
-        canvas.removeEventListener("touchcancel", leaveCanvas, { passive: false });
+        canvas.removeEventListener("touchstart", startDrawing);
+        canvas.removeEventListener("touchmove", draw);
+        canvas.removeEventListener("touchend", finishDrawing);
+        canvas.removeEventListener("touchcancel", leaveCanvas);
       }
     }
   }, [isDrawing, strokes, currentStroke, checkStrikeThroughFlag, canvasPrepared]);

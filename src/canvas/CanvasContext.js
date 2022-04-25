@@ -302,7 +302,7 @@ export const CanvasProvider = ({ children }) => {
   };
 
   const isOverIntersectingThreshold = (newStroke, oldStroke) => {
-    return IOU(newStroke, oldStroke) > 0.85;
+    return intersectionOverOld(newStroke, oldStroke) > 0.85 || IOU(newStroke, oldStroke) > 0.3;
   };
 
   const isStraightLine = (newStroke) => {
@@ -310,7 +310,7 @@ export const CanvasProvider = ({ children }) => {
   };
 
   const isSribble = (newStroke) => {
-    return getDistanceRatio(newStroke) < 0.3;
+    return getDistanceRatio(newStroke)*0.6 < 0.3;
   };
 
   const getDistanceRatio = (newStroke) => {
@@ -325,8 +325,23 @@ export const CanvasProvider = ({ children }) => {
     return endpointLength / totalLength
   }
 
-
   const IOU = (newStroke, oldStroke) => {
+    const xA = Math.max(newStroke.minX, oldStroke.minX);
+    const yA = Math.max(newStroke.minY, oldStroke.minY);
+    const xB = Math.min(newStroke.maxX, oldStroke.maxX);
+    const yB = Math.min(newStroke.maxY, oldStroke.maxY);
+
+    const intersectionArea = Math.max(0, xB - xA+1) * Math.max(0, yB - yA+1);
+    
+    const box1area = (newStroke.maxX - newStroke.minX + 1) * (newStroke.maxY - newStroke.minY + 1);
+    const box2area = (oldStroke.maxX - oldStroke.minX + 1) * (oldStroke.maxY - oldStroke.minY + 1);
+
+    const iou = intersectionArea / (box1area + box2area - intersectionArea);
+    
+    return iou;
+  }
+
+  const intersectionOverOld = (newStroke, oldStroke) => {
     const xA = Math.max(newStroke.minX, oldStroke.minX);
     const yA = Math.max(newStroke.minY, oldStroke.minY);
     const xB = Math.min(newStroke.maxX, oldStroke.maxX);
@@ -337,9 +352,9 @@ export const CanvasProvider = ({ children }) => {
     
     const box2area = (oldStroke.maxX - oldStroke.minX + 1) * (oldStroke.maxY - oldStroke.minY + 1);
 
-    const iou = intersectionArea / (box2area);
+    const ioo = intersectionArea / (box2area);
     
-    return iou;
+    return ioo;
   }
 
   const undo = () => {

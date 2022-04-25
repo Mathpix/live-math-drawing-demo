@@ -22,6 +22,9 @@ export const CanvasProvider = ({ children }) => {
   const [latex, setLatex] = useState({code: "", isPlaceholder: true});
   const [pattern, setPattern] = useState(null);
   const [canvasPrepared, setCanvasPrepared] = useState(false);
+  const [isAway, setIsAway] = useState(false);
+  const [isActive, setIsActive] = useState(true);
+  const [initialTokenReceived, setInitialTokenReceived] = useState(false);
   const canvasRef = useRef(null);
   const contextRef = useRef(null);
 
@@ -119,6 +122,7 @@ export const CanvasProvider = ({ children }) => {
     setStrokes([...strokes, currentStroke]);
     contextRef.current.closePath();
     setIsDrawing(false);
+    setIsActive(true);
     setCheckStrikeThroughFlag(!checkStrikeThroughFlag);
   };
 
@@ -130,7 +134,7 @@ export const CanvasProvider = ({ children }) => {
     }
   };
 
-  const windowResize = (event) => {
+  const windowResize = () => {
       const canvas = canvasRef.current;
       var w = document.documentElement.clientWidth - 20;
       var h = document.documentElement.clientHeight;
@@ -147,15 +151,31 @@ export const CanvasProvider = ({ children }) => {
       context.lineWidth = 6;
       setRedrawFlag(!redrawFlag);
     };
+
+  useEffect(() => {
+    setRenderLatexFlag(!renderLatexFlag);
+  }, [mathpixContext]);
   
+  const refreshToken = () => {
+    if (!document.hidden && mathpixContext === null && (isAway || isActive)) {
+      setTokenRequestFlag(!tokenRequestFlag);
+    }
+  };
 
   useEffect(() => {
     window.addEventListener('resize', windowResize);
+    document.addEventListener("visibilitychange", refreshToken);
     return () => {
       window.removeEventListener('resize', windowResize);
+      document.removeEventListener("visibilitychange", refreshToken);
     }
-  },[redrawFlag]);
+  },[redrawFlag, mathpixContext, isAway]);
 
+  useEffect(() => {
+    if (initialTokenReceived && mathpixContext === null){
+      refreshToken();
+    }
+  },[isActive]);
   
   useEffect(() => {
     if (canvasRef.current !== null) {
@@ -193,23 +213,28 @@ export const CanvasProvider = ({ children }) => {
 
   useEffect(() => {
     const f = async () => {
-      const tokenContext = await fetchToken();
-      if (tokenContext !== null) {
-        setMathpixContext(tokenContext);
-        setTokenRefreshTimeout(setTimeout(() => {
-          setTokenRequestFlag(true);
-        }, tokenContext.app_token_expires_at - Date.now() - 5000));
-        setLatex(
-          {
-            code: '\\[\\text{ Draw your math below }\\]',
-            isPlaceholder: true,
-          }
-        )
+      if (!document.hidden && isActive){
+        const tokenContext = await fetchToken();
+        if (tokenContext !== null) {
+          setMathpixContext(tokenContext);
+          setInitialTokenReceived(true);
+          setIsAway(false);
+          setIsActive(false);
+          setTokenRefreshTimeout(setTimeout(() => {
+            setTokenRequestFlag(!tokenRequestFlag);
+          }, tokenContext.app_token_expires_at - Date.now() - 3000));
+        }
+        else{
+          setMathpixContext(null);
+          setTimeout(() => {
+            setTokenRequestFlag(!tokenRequestFlag);
+          }, 2000);
+        }
       }
       else{
-        setTimeout(() => {
-          setTokenRequestFlag(!tokenRequestFlag);
-        }, 2000);
+        setMathpixContext(null);
+        if (document.hidden)
+        setIsAway(true);
       }
     };
     f();
@@ -223,7 +248,6 @@ export const CanvasProvider = ({ children }) => {
   useEffect(() => {
     const redoStrokes = undoHistory[undoHistory.length - 1];
     if (redoStrokes) {
-      console.log("here");
       if (redoStrokes.action === "Add") {
         setStrokes([...strokes, ...redoStrokes.strokes]);
       }
@@ -237,7 +261,6 @@ export const CanvasProvider = ({ children }) => {
   useEffect(() => {
     const undoStrokes = redoHistory[redoHistory.length - 1];
     if (undoStrokes) {
-      console.log("here2");
       if (undoStrokes.action === "Add") {
         setStrokes(strokes.filter(stroke => !undoStrokes.strokes.includes(stroke)));
       } else if (undoStrokes.action === "Remove") {
@@ -371,6 +394,7 @@ export const CanvasProvider = ({ children }) => {
       setUndoHistory([...undoHistory, {action: "Remove", strokes:[...strokes]}]);
       setRedoHistory([]);
       setStrokes([]);
+      setIsActive(true);
       clearTimeout(tokenRefreshTimeout);
       setTokenRequestFlag(!tokenRequestFlag);
     }
@@ -390,6 +414,14 @@ export const CanvasProvider = ({ children }) => {
           }
         )
       }
+    }
+    else if (!isActive) {
+      setLatex(
+        {
+          code: '\\[\\text{ Session expired due to inactivity. Draw to start new session. }\\]',
+          isPlaceholder: true,
+        }
+      )
     }
     else{
       setLatex(

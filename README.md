@@ -1,28 +1,43 @@
+# Live math drawing demo
+
+A small React app that recognizes handwritten math as you draw it, using the Mathpix
+[`v3/strokes`](https://docs.mathpix.com/reference/post-v3-strokes) endpoint with a live stroke session.
+
 # Getting started
 
-To run this sample code, you must first get a Mathpix OCR API key. This can be done here: 
+To run this sample code, you must first get a Mathpix OCR API key. This can be done here:
 
-https://accounts.mathpix.com
+https://console.mathpix.com
 
-Then, put your `app_id` and `app_key` into .env file (https://github.com/Mathpix/live-math-drawing-demo/blob/master/.env.sample):
+Then copy `.env.sample` to `.env` and fill in your `app_id` and `app_key`:
 
 ```
-export app_id=YOUR_APP_ID
-export app_key=YOUR_APP_KEY
+cp .env.sample .env
 ```
+
+```
+REACT_APP_MATHPIX_API_ID=YOUR_APP_ID
+REACT_APP_MATHPIX_API_KEY=YOUR_APP_KEY
+```
+
+The `REACT_APP_` prefix is required: Create React App only exposes variables that start with it, and it
+reads `.env` on its own, so do not `export` these or `source` the file.
 
 Then:
 
 ```
 npm install
-source .env
 npm start
 ```
 
 Then, open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
-# API docs 
+# API docs
 
-This demo is build with the following 2 API endpoints:
-- getting app tokens which is done on the server side: https://docs.mathpix.com/#using-client-side-app-tokens
-- making digital ink requests to the Mathpix OCR API from client side JS: https://docs.mathpix.com/#request-parameters-2
+This demo is built with the following 2 API endpoints:
+- getting an app token, used here to authenticate the drawing requests and to open a stroke session: https://docs.mathpix.com/reference/authentication#using-client-side-app-tokens
+- making digital ink requests to the Mathpix OCR API from client side JS: https://docs.mathpix.com/reference/post-v3-strokes
+
+Note that this demo requests the app token from the browser, so your API key ends up in the client
+bundle. That is fine for running the demo locally, but in production you should request the app token
+from your own server and hand only the token to the client — that is what app tokens are for.
